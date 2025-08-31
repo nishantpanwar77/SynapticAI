@@ -1,3 +1,5 @@
+![Synaptic AI Logo](https://raw.githubusercontent.com/nishantpanwar77/SynapticAI/refs/heads/master/synpt-ai-web/public/Frame.png)
+
 # Synaptic AI
 
 Synaptic AI is a locally installed large language model (LLM) platform with a sleek Angular v19 user interface. It enables private, on-device interaction with powerful language models without relying on cloud services, ensuring privacy, performance, and control.
