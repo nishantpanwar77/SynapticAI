@@ -1,0 +1,88 @@
+.del-btn {
+  margin: 0px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+.chat-label {
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.1s;
+}
+
+.timeago {
+  color: #a3a3a3;
+  font-size: 12px;
+  min-width: 70px;
+}
+
+.chat-list {
+  cursor: pointer;
+  &:hover {
+    transition: all 0.03s;
+    background-color: #5500ff12;
+    color: #5500ff;
+    .del-btn {
+      transition: all 0.1s;
+      opacity: 0.5;
+      display: flex !important;
+    }
+    .timeago {
+      display: none !important;
+    }
+  }
+}
+
+.del-btn {
+  transition: all 0.03s;
+  background-color: transparent;
+  color: #5500ff;
+  opacity: 0;
+  border: none;
+  &:hover {
+    transition: all 0.1s;
+    opacity: 1 !important;
+  }
+}
+
+.sidebar-container {
+  height: 100%;
+  // background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  border-right: 1px solid #0000001b;
+
+  .upper-container {
+    z-index: 10;
+    // background: #222222;
+    position: sticky;
+    width: 100%;
+    top: 0px;
+    border-bottom: 1px solid #0000001b;
+  }
+
+  .sidebar-footer {
+    position: sticky;
+    width: 100%;
+    bottom: 0px;
+  }
+
+  &::-webkit-scrollbar {
+    width: 0.5em !important;
+    height: 0.5em !important;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #ffffff1a !important;
+    border-radius: 3px !important;
+
+    &:hover {
+      background: #ffffff33 !important;
+    }
+  }
+}

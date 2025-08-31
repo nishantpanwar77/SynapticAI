@@ -1,0 +1,14 @@
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav
+    #sidenav
+    [mode]="mobileQuery.matches ? 'over' : 'side'"
+    [opened]="isSidenavOpen"
+    class="sidebar"
+  >
+    <app-sidebar></app-sidebar>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="main-content">
+    <app-main-area (toggleSidebar)="toggleSidenav($event)"></app-main-area>
+  </mat-sidenav-content>
+</mat-sidenav-container>

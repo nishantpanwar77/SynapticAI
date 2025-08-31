@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+python-dotenv
+torch
+transformers
+pydantic
+cryptography
+motor
+pymongo
+sse_starlette
+ollama
+sentence-transformers
+chromadb
+certifi
+pycryptodome
+# psutil

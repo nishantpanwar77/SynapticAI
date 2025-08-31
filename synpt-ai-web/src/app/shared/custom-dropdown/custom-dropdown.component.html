@@ -1,0 +1,68 @@
+<div
+  class="custom-dropdown"
+  [style.width]="width()"
+  [class.disabled]="disabled()"
+  [class.error]="errorState && touched"
+>
+  <div
+    #dropdown
+    class="dropdown-header"
+    [class.added-border]="isOpen"
+    (click)="toggleDropdown($event)"
+    tabindex="0"
+  >
+    <span class="selected-option" [class.placeholder]="value === null">
+      <div class="d-flex gap-2 align-items-center">
+        {{ getDisplayValue() | titlecase }}
+        <small>{{ modelSize }}</small>
+      </div>
+    </span>
+    <span class="dropdown-arrow" [class.open]="isOpen">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </span>
+  </div>
+  <!-- {{options|json}} -->
+
+  <div
+    class="dropdown-options-container"
+    [class.position-down]="openDirection === 'down'"
+    [class.position-up]="openDirection === 'up'"
+    [@dropdownAnimation]="dropdownState"
+  >
+    @if (isOpen) {
+    <ul #optionsContainer class="dropdown-options">
+      @for (option of options(); track $index) {
+      <li
+        class="dropdown-option d-flex gap-2 align-items-center"
+        [class.selected]="isSelected(option)"
+        (click)="selectOption(option)"
+      >
+        <small
+          >{{ option.model | titlecase }}
+          <b>{{ formatBytes(option.size!) }}</b></small
+        >
+      </li>
+      } @if (options.length === 0) {
+      <li class="no-options">No options available</li>
+      }
+    </ul>
+    }
+  </div>
+  @if (errorState && touched) {
+  <div class="error-message">
+    {{ errorMessage() }}
+  </div>
+  }
+</div>

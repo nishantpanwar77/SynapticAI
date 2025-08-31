@@ -1,0 +1,92 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import url(./_variables.scss);
+
+html,
+body {
+  scroll-behavior: smooth;
+  margin: 0px;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #2d2d2d;
+}
+
+@font-face {
+  font-family: monocode;
+  src: url(../public/fonts/monocode-regular.ttf);
+}
+
+.fs-14px {
+  font-size: 14px;
+}
+
+.mat-mdc-raised-button.mat-primary {
+  background-color: #4c4cff !important;
+}
+
+.mat-mdc-button.mat-primary {
+  color: #4c4cff !important;
+}
+
+.btns-ic {
+  padding: 5px !important;
+}
+
+.btns {
+  background-color: #5500ff12;
+  color: #7f00d3;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 20px;
+
+  &:hover {
+    background-color: #5500ff26;
+    border: 1px solid #5500ff74;
+  }
+
+  &:focus {
+    background-color: #5500ff2d;
+    border: 1px solid #5500ff74;
+    outline: none;
+  }
+}
+
+/* Common styles for both vertical and horizontal scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  /* Width for vertical scrollbar */
+  height: 6px;
+  /* Height for horizontal scrollbar */
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #eaeaea;
+  border-radius: 5px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #aeaeae;
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

@@ -1,0 +1,419 @@
+<div class="p-3 h-wrapper position-relative">
+  <button class="btns btns-ic w-auto" (click)="toggle()">
+    @if (toggleKey()) {
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M3 18V16H16V18H3ZM3 13V11H13V13H3ZM3 8V6H16V8H3Z"
+        fill="#5500ff"
+      />
+      <path
+        d="M22.5 12.2308L18.2692 8L17 9.26923L19.9615 12.2308L17 15.1923L18.2692 16.4615L22.5 12.2308Z"
+        fill="#5500ff"
+      />
+    </svg>
+    }@else {
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M3 18V16H16V18H3ZM19.6 17L14.6 12L19.6 7L21 8.4L17.4 12L21 15.6L19.6 17ZM3 13V11H13V13H3ZM3 8V6H16V8H3Z"
+        fill="#5500ff"
+      />
+    </svg>
+    }
+  </button>
+  @if (isResponseFetching() || currentChatId()) {
+  <section class="msg-container container pt-2">
+    <div class="chat-wrapper p-1 position-relative" #messagesContainer>
+      <div
+        *ngFor="let message of messages()"
+        class="message mx-1 mb-4"
+        [ngClass]="{
+          'user-message ms-auto': message.type === 'user',
+          'ai-message': message.type === 'ai',
+          'error-message': message.type === 'error'
+        }"
+      >
+        <div *ngIf="message.type === 'user'" class="user-content">
+          {{ message.content }}
+        </div>
+
+        <div *ngIf="message.type === 'ai'">
+          <div
+            *ngIf="message.sections && message.sections.length > 0"
+            class="structured-content"
+            [ngClass]="{ 'cursor-blink': message.isStreaming }"
+          >
+            <div
+              *ngFor="let section of message.sections; trackBy: trackBySection"
+              class="content-section"
+              [ngClass]="'section-' + section.type"
+            >
+              <div
+                *ngIf="section.type === 'text'"
+                class="text-section"
+                [innerHTML]="section.content"
+              ></div>
+
+              <div *ngIf="section.type === 'code'" class="code-section">
+                <div class="code-container">
+                  <div class="code-header">
+                    <span class="language-label">{{
+                      section.language || "code"
+                    }}</span>
+                    <button
+                      mat-icon-button
+                      (click)="copyCodeSection(section.content)"
+                      class="d-flex justify-content-center align-items-center"
+                    >
+                      <mat-icon>content_copy</mat-icon>
+                    </button>
+                  </div>
+                  <pre
+                    class="code-block"
+                    [ngClass]="'language-' + (section.language || 'text')"
+                  >
+                    <code [innerHTML]="highlightSyntax(section.content, section.language || 'text')"></code>
+                  </pre>
+                </div>
+              </div>
+
+              <div *ngIf="section.type === 'table'" class="table-section">
+                <div class="table-wrapper">
+                  <div class="table-header">
+                    <span class="table-label">
+                      <i class="fas fa-table"></i> Table
+                    </span>
+                    <button
+                      (click)="copyTableSection(section)"
+                      class="copy-btn btn btn-sm"
+                    >
+                      <i class="fas fa-copy"></i> Copy
+                    </button>
+                  </div>
+                  <div
+                    class="table-content"
+                    [innerHTML]="section.content"
+                  ></div>
+                </div>
+              </div>
+
+              <div *ngIf="section.type === 'think'" class="think-section">
+                <div class="think-container">
+                  <div class="think-header">
+                    <span class="think-label">
+                      <i class="fas fa-brain"></i> Thinking
+                    </span>
+                    <button
+                      (click)="toggleThinkSection($event)"
+                      class="toggle-btn btn btn-sm"
+                    >
+                      <i class="fas fa-chevron-down"></i>
+                    </button>
+                  </div>
+                  <div
+                    class="think-content"
+                    [innerHTML]="section.content"
+                  ></div>
+                </div>
+              </div>
+
+              <div
+                *ngIf="section.type === 'header'"
+                class="header-section"
+                [innerHTML]="section.content"
+              ></div>
+
+              <div
+                *ngIf="section.type === 'list'"
+                class="list-section"
+                [innerHTML]="section.content"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="message.type === 'error'" class="error-content">
+          {{ message.content }}
+        </div>
+      </div>
+    </div>
+    @if (isLoading()) {
+    <app-loader-one></app-loader-one>
+    }
+  </section>
+  <div class="container h-auto">
+    <div class="input-wrapper shadow-sm">
+      <textarea
+        [disabled]="modelList().length === 0"
+        rows="3"
+        type="text"
+        [ngModel]="userPrompt()"
+        (ngModelChange)="userPrompt.set($event)"
+        (keyup.enter)="initiateChat()"
+        class="custom-input"
+        placeholder="Type something here..."
+      ></textarea>
+      <div class="d-flex align-items-center justify-content-between ps-1">
+        @if (modelList().length > 0) {
+        <app-custom-dropdown
+          [disabled]="messages().length > 0"
+          (selectionChange)="onSelectionChange($event)"
+          [selectedOption]="selectedOption()"
+          [options]="modelList()"
+          [placeholder]="'Select an AI Model'"
+        ></app-custom-dropdown>
+        } @if (isLoading()) {
+        <button
+          (click)="cancelGeneration()"
+          mat-ripple
+          class="me-2 send-btn p-2 bg-white shadow-sm border-0"
+          matSuffix
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="35"
+            height="35"
+            viewBox="0 0 478 478"
+            fill="none"
+          >
+            <g clip-path="url(#clip0_165_29)">
+              <path
+                d="M478 239C478 107.004 370.996 0 239 0C107.004 0 0 107.004 0 239C0 370.996 107.004 478 239 478C370.996 478 478 370.996 478 239Z"
+                fill="white"
+              />
+              <rect
+                x="88"
+                y="88"
+                width="302.32"
+                height="302.32"
+                rx="70"
+                fill="#DA0000"
+              />
+            </g>
+            <defs>
+              <clipPath id="clip0_165_29">
+                <rect width="478" height="478" fill="white" />
+              </clipPath>
+            </defs>
+          </svg>
+        </button>
+        }@else {
+        <button
+          [disabled]="isLoading() || modelList().length === 0"
+          (click)="initiateChat()"
+          mat-ripple
+          class="me-2 send-btn p-2 bg-white shadow-sm border-0"
+          matSuffix
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="35"
+            height="35"
+            viewBox="0 0 479 479"
+            fill="none"
+          >
+            <path
+              d="M478.02 239.02C478.02 107.023 371.016 0.0195312 239.02 0.0195312C107.023 0.0195312 0.0195313 107.023 0.0195313 239.02C0.0195313 371.016 107.023 478.02 239.02 478.02C371.016 478.02 478.02 371.016 478.02 239.02Z"
+              fill="white"
+            />
+            <path
+              d="M176.661 291.011L203.146 277.767C220.63 269.026 229.371 264.656 238.775 264.655C248.178 264.656 256.92 269.026 274.404 277.768L300.889 291.012C345.077 313.105 367.17 324.152 377.322 314.001C387.473 303.50 376.426 281.756 354.332 237.568L274.403 77.7114C258.856 46.6199 251.084 31.0736 238.775 31.0733C226.466 31.0731 218.693 46.6191 203.147 77.7111L123.218 237.569C101.124 281.757 90.0771 303.851 100.228 314.001C110.379 324.152 132.473 313.105 176.661 291.011Z"
+              fill="#7F00D3"
+              fill-opacity="0.24"
+              stroke="black"
+              stroke-width="0.00256"
+            />
+            <path
+              d="M176.661 291.011L203.146 277.767C220.63 269.026 229.371 264.656 238.775 264.655C248.178 264.656 256.92 269.026 274.404 277.768L300.889 291.012C345.077 313.105 367.17 324.152 377.322 314.001C387.473 303.50 376.426 281.756 354.332 237.568L274.403 77.7114C258.856 46.6199 251.084 31.0736 238.775 31.0733C226.466 31.0731 218.693 46.6191 203.147 77.7111L123.218 237.569C101.124 281.757 90.0771 303.851 100.228 314.001C110.379 324.152 132.473 313.105 176.661 291.011Z"
+              fill="#7F00D3"
+              fill-opacity="0.24"
+              stroke="black"
+              stroke-width="0.00256"
+            />
+            <path
+              d="M229.868 292.571L191.155 311.928C185.657 314.677 181.736 319.809 180.531 325.836L175.422 351.382C172.709 364.946 187.383 375.286 199.243 368.169L233.65 347.524C236.804 345.632 240.744 345.633 243.897 347.524L278.306 368.17C290.166 375.286 304.841 364.946 302.127 351.382L297.017 325.835C295.813 319.809 291.892 314.677 286.394 311.928L247.681 292.571C242.074 289.767 235.474 289.767 229.868 292.571Z"
+              fill="#7F00D3"
+              stroke="black"
+              stroke-width="0.00256"
+            />
+            <defs>
+              <clipPath id="clip0_164_21">
+                <rect
+                  width="478"
+                  height="478"
+                  fill="white"
+                  transform="translate(0.0195312 0.0195312)"
+                />
+              </clipPath>
+            </defs>
+          </svg>
+        </button>
+        }
+      </div>
+    </div>
+    @if (modelList().length === 0) {
+    <div class="card mt-2 p-1 border-danger shadow">
+      <small class="ps-2 text-danger"
+        >No AI models found in your system, please download <b>Ollama</b> &
+        <b>AI models</b> here:
+        <a mat-button target="_blank" href="https://ollama.com/search">
+          <mat-icon>download</mat-icon> Download Ollama</a
+        ></small
+      >
+    </div>
+    }
+  </div>
+  }@else {
+  <div class="h-100">
+    <div class="h-100 d-flex justify-content-center align-items-center">
+      <div class="w-100">
+        <div class="m-0 row">
+          <div class="col-12 col-md-2 d-none d-md-block p-1"></div>
+          <div class="col-12 col-md-8">
+            <div class="d-flex justify-content-center align-items-center">
+              <span class="text-center">
+                <app-logo [width]="240"></app-logo>
+                <p class="m-0 text-secondary">How can I help you today?</p>
+              </span>
+            </div>
+
+            <div class="input-wrapper shadow-sm mt-3">
+              <textarea
+                [disabled]="modelList().length === 0"
+                rows="3"
+                type="text"
+                [ngModel]="userPrompt()"
+                (ngModelChange)="userPrompt.set($event)"
+                (keyup.enter)="initiateChat()"
+                class="custom-input"
+                placeholder="Type something here..."
+              ></textarea>
+              <div class="d-flex align-items-center justify-content-between">
+                @if (modelList().length > 0) {
+
+                <app-custom-dropdown
+                  [disabled]="messages().length > 0"
+                  (selectionChange)="onSelectionChange($event)"
+                  [selectedOption]="selectedOption()"
+                  [options]="modelList()"
+                  [placeholder]="'Select an AI Model'"
+                ></app-custom-dropdown>
+                } @if (isLoading()) {
+                <button
+                  (click)="cancelGeneration()"
+                  mat-ripple
+                  class="me-2 send-btn p-2 bg-white shadow-sm border-0"
+                  matSuffix
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="35"
+                    height="35"
+                    viewBox="0 0 478 478"
+                    fill="none"
+                  >
+                    <g clip-path="url(#clip0_165_29)">
+                      <path
+                        d="M478 239C478 107.004 370.996 0 239 0C107.004 0 0 107.004 0 239C0 370.996 107.004 478 239 478C370.996 478 478 370.996 478 239Z"
+                        fill="white"
+                      />
+                      <rect
+                        x="88"
+                        y="88"
+                        width="302.32"
+                        height="302.32"
+                        rx="70"
+                        fill="#DA0000"
+                      />
+                    </g>
+                    <defs>
+                      <clipPath id="clip0_165_29">
+                        <rect width="478" height="478" fill="white" />
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </button>
+                }@else {
+                <button
+                  [disabled]="isLoading() || modelList().length === 0"
+                  (click)="initiateChat()"
+                  mat-ripple
+                  class="me-2 send-btn p-2 bg-white shadow-sm border-0"
+                  matSuffix
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="35"
+                    height="35"
+                    viewBox="0 0 479 479"
+                    fill="none"
+                  >
+                    <path
+                      d="M478.02 239.02C478.02 107.023 371.016 0.0195312 239.02 0.0195312C107.023 0.0195312 0.0195313 107.023 0.0195313 239.02C0.0195313 371.016 107.023 478.02 239.02 478.02C371.016 478.02 478.02 371.016 478.02 239.02Z"
+                      fill="white"
+                    />
+                    <path
+                      d="M176.661 291.011L203.146 277.767C220.63 269.026 229.371 264.656 238.775 264.655C248.178 264.656 256.92 269.026 274.404 277.768L300.889 291.012C345.077 313.105 367.17 324.152 377.322 314.001C387.473 303.50 376.426 281.756 354.332 237.568L274.403 77.7114C258.856 46.6199 251.084 31.0736 238.775 31.0733C226.466 31.0731 218.693 46.6191 203.147 77.7111L123.218 237.569C101.124 281.757 90.0771 303.851 100.228 314.001C110.379 324.152 132.473 313.105 176.661 291.011Z"
+                      fill="#7F00D3"
+                      fill-opacity="0.24"
+                      stroke="black"
+                      stroke-width="0.00256"
+                    />
+                    <path
+                      d="M176.661 291.011L203.146 277.767C220.63 269.026 229.371 264.656 238.775 264.655C248.178 264.656 256.92 269.026 274.404 277.768L300.889 291.012C345.077 313.105 367.17 324.152 377.322 314.001C387.473 303.50 376.426 281.756 354.332 237.568L274.403 77.7114C258.856 46.6199 251.084 31.0736 238.775 31.0733C226.466 31.0731 218.693 46.6191 203.147 77.7111L123.218 237.569C101.124 281.757 90.0771 303.851 100.228 314.001C110.379 324.152 132.473 313.105 176.661 291.011Z"
+                      fill="#7F00D3"
+                      fill-opacity="0.24"
+                      stroke="black"
+                      stroke-width="0.00256"
+                    />
+                    <path
+                      d="M229.868 292.571L191.155 311.928C185.657 314.677 181.736 319.809 180.531 325.836L175.422 351.382C172.709 364.946 187.383 375.286 199.243 368.169L233.65 347.524C236.804 345.632 240.744 345.633 243.897 347.524L278.306 368.17C290.166 375.286 304.841 364.946 302.127 351.382L297.017 325.835C295.813 319.809 291.892 314.677 286.394 311.928L247.681 292.571C242.074 289.767 235.474 289.767 229.868 292.571Z"
+                      fill="#7F00D3"
+                      stroke="black"
+                      stroke-width="0.00256"
+                    />
+                    <defs>
+                      <clipPath id="clip0_164_21">
+                        <rect
+                          width="478"
+                          height="478"
+                          fill="white"
+                          transform="translate(0.0195312 0.0195312)"
+                        />
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </button>
+                }
+              </div>
+            </div>
+            @if (modelList().length === 0) {
+            <div class="card mt-2 p-1 border-danger shadow">
+              <small class="ps-2 text-danger"
+                >No AI models found in your system, please download
+                <b>Ollama</b> & <b>AI models</b> here:
+                <a mat-button target="_blank" href="https://ollama.com/search">
+                  <mat-icon>download</mat-icon> Download Ollama</a
+                ></small
+              >
+            </div>
+            }
+          </div>
+          <div class="col-12 col-md-2 d-none d-md-block p-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>
